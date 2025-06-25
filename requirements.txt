@@ -1,0 +1,36 @@
+# Web framework
+fastapi
+uvicorn
+
+# DB clients
+qdrant-client
+typesense
+pymongo
+
+# LLM + embeddings
+transformers
+torch
+sentence-transformers
+
+# Optional LangChain for utility
+langchain
+
+# HTTP calls
+httpx
+
+# Config
+python-dotenv
+
+# Token counting + text processing
+tiktoken
+nltk
+spacy
+
+# Testing
+pytest
+
+# Optional JSON validation
+pydantic
+
+# Optional: astunparse (for code chunking helpers if you want to parse Python code)
+astunparse

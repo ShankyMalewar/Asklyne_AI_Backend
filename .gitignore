@@ -1,0 +1,51 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# Virtual environments
+venv/
+.env
+.env.*
+
+# VSCode / PyCharm settings
+.vscode/
+.idea/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Test/coverage outputs
+coverage/
+htmlcov/
+*.cover
+*.pytest_cache/
+
+# Docker-related
+*.pid
+*.sock
+*.db
+*.sqlite3
+
+# Compiled static files (if any frontend is added later)
+build/
+dist/
+*.js.map
+
+# Package management
+pip-log.txt
+poetry.lock
+poetry.toml
+
+# FastAPI cache (optional)
+__fastapi_cache__
+
+# Typesense or Qdrant local DB files (if using local)
+typesense-data/
+qdrant-data/
