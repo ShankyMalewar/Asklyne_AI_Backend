@@ -34,13 +34,21 @@ async def upload_file(
     # Init chunker and chunk
     chunker = Chunker(file_type=mode, max_tokens=max_tokens, overlap=overlap)
     chunks = chunker.chunk(text)
+    
+    from app.core.embedder import Embedder
+    
+    # Init embedder and embed chunks
+    embedder = Embedder(tier=tier)
+    embeddings = embedder.embed_chunks(chunks)
+
 
     return {
         "session_id": session_id,
         "tier": tier,
         "mode": mode,
         "num_chunks": len(chunks),
-        "sample_chunk": chunks[0] if chunks else "[empty]"
+        "sample_chunk": chunks[0] if chunks else "[empty]",
+        "sample_embedding": embeddings[0][:5] if embeddings else []
     }
 
 
