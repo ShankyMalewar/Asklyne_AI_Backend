@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, UploadFile, Form
+from fastapi import APIRouter, File, UploadFile, Form , Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
@@ -33,8 +33,11 @@ async def handle_query(request: QueryRequest):
 
 
 @router.post("/test-llm")
-async def test_llm():
+async def test_llm(tier: str = Query("free", enum=["free", "plus", "pro"])):
     from app.core.llm_client import LLMClient
-    client = LLMClient("mistral-7b-instruct-v0.3")  # Asklyne Plus-tier model
-    response = await client.query("Explain gravity in simple words.")
-    return {"response": response}
+    try:
+        client = LLMClient.from_tier(tier)
+        response = await client.query("Explain gravity in simple words.")
+        return {"tier": tier, "response": response}
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
