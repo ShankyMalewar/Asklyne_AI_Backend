@@ -35,3 +35,6 @@ pydantic
 
 # Optional: astunparse (for code chunking helpers if you want to parse Python code)
 astunparse
+
+# for pdf parsing
+pdfplumber

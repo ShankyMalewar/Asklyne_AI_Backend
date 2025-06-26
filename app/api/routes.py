@@ -1,6 +1,8 @@
 from fastapi import APIRouter, File, UploadFile, Form , Query
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+import pdfplumber
+import io
 
 router = APIRouter()
 
@@ -13,11 +15,34 @@ def healthcheck():
 async def upload_file(
     file: UploadFile = File(...),
     session_id: str = Form(...),
-    mode: str = Form(...),
-    tier: str = Form(...)
+    mode: str = Form(...),   # "text" or "code"
+    tier: str = Form(...),   # Still passed, for logging or future use
 ):
-    # TODO: chunk → embed → index file
-    return {"message": f"Received file {file.filename} for session {session_id}"}
+    from app.core.chunker import Chunker
+
+    # Read file content
+    content = await file.read()
+    if file.filename.endswith(".pdf"):
+        with pdfplumber.open(io.BytesIO(content)) as pdf:
+            text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+    else:
+        text = content.decode("utf-8", errors="ignore")
+
+    max_tokens = 480
+    overlap = 80
+
+    # Init chunker and chunk
+    chunker = Chunker(file_type=mode, max_tokens=max_tokens, overlap=overlap)
+    chunks = chunker.chunk(text)
+
+    return {
+        "session_id": session_id,
+        "tier": tier,
+        "mode": mode,
+        "num_chunks": len(chunks),
+        "sample_chunk": chunks[0] if chunks else "[empty]"
+    }
+
 
 
 class QueryRequest(BaseModel):

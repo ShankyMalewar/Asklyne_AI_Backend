@@ -28,12 +28,12 @@ class Chunker:
         print(f"Split into {len(sentence_tokens)} sentences")
         chunks = []
         current_chunk = []
-        current_tokens = []
+        current_tokens = 0
         i=0
         while i< len(sentence_tokens):
-            sentence,tokens = sentence_tokens[i]
+            sentence,est_tokens = sentence_tokens[i]
             
-            if current_tokens + tokens > self.max_tokens:
+            if current_tokens + est_tokens > self.max_tokens:
                 if current_chunk:
                     chunks.append(" ".join(current_chunk))
                     
@@ -50,7 +50,7 @@ class Chunker:
                     i+=1
                     continue
             current_chunk.append(sentence)
-            current_tokens += tokens
+            current_tokens += est_tokens
             i +=1
         
         if current_tokens:
