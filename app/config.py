@@ -30,3 +30,7 @@ class Config:
         "plus": int(os.getenv("PLUS_FILE_SIZE_MB", 10)),
         "pro": int(os.getenv("PRO_FILE_SIZE_MB", 20)),
     }
+    
+    QDRANT_HOST = os.getenv("QDRANT_HOST")
+    QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
+    QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")

@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 _loaded_models = {}
 
 TIER_EMBED_MODEL = {
-    "free": "BAAI/bge-small-en-v1.5",
+    "free": "BAAI/bge-large-en-v1.5",
     "plus": "BAAI/bge-large-en-v1.5",
     "pro": "intfloat/multilingual-e5-large"
     # Optional: add 'code' support later (e.g. microsoft/codebert-base)

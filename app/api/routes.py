@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import pdfplumber
 import io
+from app.services.qdrant_service import QdrantService
 
 router = APIRouter()
 
@@ -15,32 +16,40 @@ def healthcheck():
 async def upload_file(
     file: UploadFile = File(...),
     session_id: str = Form(...),
-    mode: str = Form(...),   # "text" or "code"
-    tier: str = Form(...),   # Still passed, for logging or future use
+    mode: str = Form(...),
+    tier: str = Form(...),
 ):
     from app.core.chunker import Chunker
+    from app.core.embedder import Embedder
+    from app.services.qdrant_service import QdrantService
 
     # Read file content
     content = await file.read()
     if file.filename.endswith(".pdf"):
+        import pdfplumber, io
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
     else:
         text = content.decode("utf-8", errors="ignore")
 
+    # Chunking setup
     max_tokens = 480
     overlap = 80
-
-    # Init chunker and chunk
     chunker = Chunker(file_type=mode, max_tokens=max_tokens, overlap=overlap)
     chunks = chunker.chunk(text)
-    
-    from app.core.embedder import Embedder
-    
-    # Init embedder and embed chunks
+
+    # Embedding
     embedder = Embedder(tier=tier)
     embeddings = embedder.embed_chunks(chunks)
 
+    # Store in Qdrant
+    qdrant = QdrantService(tier=tier)
+    qdrant.upsert_chunks(
+        chunks=chunks,
+        embeddings=embeddings,
+        session_id=session_id,
+        mode=mode
+    )
 
     return {
         "session_id": session_id,
@@ -50,6 +59,7 @@ async def upload_file(
         "sample_chunk": chunks[0] if chunks else "[empty]",
         "sample_embedding": embeddings[0][:5] if embeddings else []
     }
+
 
 
 
