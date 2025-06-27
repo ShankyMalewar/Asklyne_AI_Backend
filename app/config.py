@@ -12,9 +12,9 @@ class Config:
 
     # Token limits per tier
     TOKEN_LIMITS = {
-        "free": int(os.getenv("FREE_TOKEN_LIMIT", 1000)),
-        "plus": int(os.getenv("PLUS_TOKEN_LIMIT", 3000)),
-        "pro": int(os.getenv("PRO_TOKEN_LIMIT", 8000)),
+        "free": int(os.getenv("FREE_TOKEN_LIMIT", 2048)),
+        "plus": int(os.getenv("PLUS_TOKEN_LIMIT", 4096)),
+        "pro": int(os.getenv("PRO_TOKEN_LIMIT", 8192)),
     }
 
     # Exchange count caps
@@ -26,9 +26,9 @@ class Config:
 
     # File size caps (MB)
     FILE_SIZE_MB_LIMITS = {
-        "free": int(os.getenv("FREE_FILE_SIZE_MB", 5)),
-        "plus": int(os.getenv("PLUS_FILE_SIZE_MB", 10)),
-        "pro": int(os.getenv("PRO_FILE_SIZE_MB", 20)),
+        "free": int(os.getenv("FREE_FILE_SIZE_MB", 15)),
+        "plus": int(os.getenv("PLUS_FILE_SIZE_MB", 25)),
+        "pro": int(os.getenv("PRO_FILE_SIZE_MB", 40)),
     }
     
     QDRANT_HOST = os.getenv("QDRANT_HOST")
