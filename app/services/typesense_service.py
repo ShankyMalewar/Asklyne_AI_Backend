@@ -10,9 +10,9 @@ class TypesenseService:
 
         self.client = typesense.Client({
             'nodes': [{
-                'host': Config.TYPESENSE_HOST.replace("http://", "").replace("https://", ""),
-                'port': 8108,
-                'protocol': 'http'
+                'host': Config.TYPESENSE_HOST.replace("https://", "").replace("http://", ""),
+                'port': 443,
+                'protocol': 'https'
             }],
             'api_key': Config.TYPESENSE_API_KEY,
             'connection_timeout_seconds': 2
@@ -34,7 +34,7 @@ class TypesenseService:
                     {"name": "tier", "type": "string", "facet": True},
                     {"name": "session_id", "type": "string", "facet": True}
                 ],
-                "default_sorting_field": "id"
+                
             }
             self.client.collections.create(schema)
             print(f"✅ Created Typesense collection '{self.collection_name}'")

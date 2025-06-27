@@ -34,3 +34,7 @@ class Config:
     QDRANT_HOST = os.getenv("QDRANT_HOST")
     QDRANT_PORT = int(os.getenv("QDRANT_PORT", 6333))
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+    
+    # Typesense Config
+    TYPESENSE_HOST = os.getenv("TYPESENSE_HOST")
+    TYPESENSE_API_KEY = os.getenv("TYPESENSE_API_KEY")

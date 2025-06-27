@@ -4,6 +4,8 @@ from pydantic import BaseModel
 import pdfplumber
 import io
 from app.services.qdrant_service import QdrantService
+from app.services.typesense_service import TypesenseService
+
 
 router = APIRouter()
 
@@ -50,6 +52,14 @@ async def upload_file(
         session_id=session_id,
         mode=mode
     )
+    # Store in Typesense
+    typesense = TypesenseService(tier=tier)
+    typesense.upsert_chunks(
+        chunks=chunks,
+        session_id=session_id,
+        mode=mode
+)
+
 
     return {
         "session_id": session_id,
