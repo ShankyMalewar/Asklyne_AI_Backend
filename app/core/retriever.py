@@ -3,11 +3,14 @@ from app.services.typesense_service import TypesenseService
 from app.core.embedder import Embedder
 
 class Retriever:
-    def __init__(self, tier: str):
+    def __init__(self, tier: str, mode: str):
         self.tier = tier.lower()
-        self.embedder = None
-        self.qdrant = QdrantService(tier=self.tier)
+        self.mode = mode.lower()
+
+        self.embedder = Embedder(tier=self.tier, mode=self.mode)
+        self.qdrant = QdrantService(tier=self.tier, mode=self.mode)
         self.typesense = TypesenseService(tier=self.tier)
+
 
     def retrieve(self, query: str, session_id: str, mode: str, top_k: int = 5) -> list[dict]:
         if not self.embedder or self.embedder.mode != mode:
