@@ -4,7 +4,7 @@ python-multipart
 uvicorn
 
 # DB clients
-qdrant-client
+qdrant-client==1.7.3
 typesense
 pymongo
 
@@ -39,3 +39,8 @@ astunparse
 
 # for pdf parsing
 pdfplumber
+
+#ocr
+pytesseract 
+pillow 
+pdf2image

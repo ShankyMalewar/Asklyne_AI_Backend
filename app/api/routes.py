@@ -1,4 +1,5 @@
 from fastapi import APIRouter, File, UploadFile, Form , Query
+from typing import Literal
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import pdfplumber
@@ -6,6 +7,8 @@ import io
 import traceback
 from app.services.qdrant_service import QdrantService
 from app.services.typesense_service import TypesenseService
+from PIL import Image
+import pytesseract
 
 router = APIRouter()
 
@@ -28,8 +31,16 @@ async def upload_file(
 
     # Read file content
     content = await file.read()
-    if file.filename.endswith(".pdf"):
-        import pdfplumber, io
+    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+    if mode == "notes":
+        try:
+            image = Image.open(io.BytesIO(content))
+            text = pytesseract.image_to_string(image)
+            
+        except Exception as e:
+            return JSONResponse(content={"error": f"OCR failed: {str(e)}"}, status_code=400)
+
+    elif file.filename.endswith(".pdf"):
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
     else:
@@ -75,8 +86,8 @@ async def upload_file(
 class QueryRequest(BaseModel):
     session_id: str
     query: str
-    mode: str
-    tier: str
+    mode: Literal["text", "notes", "code"]
+    tier: Literal["free", "plus", "pro"]
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
