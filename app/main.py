@@ -7,12 +7,21 @@ from app.core.embedder import Embedder
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # ✅ Preload embedding models at startup
     print("[Startup] Preloading embedding models...")
-    for tier in ["free", "plus", "pro"]:
-        Embedder(tier=tier)
+
+    tiers = ["free", "plus", "pro"]
+    for tier in tiers:
+        print(f"▶ Preloading text embedder for {tier}")
+        Embedder(tier=tier, mode="text")
+        print(f"✅ Done text for {tier}")
+
+        print(f"▶ Preloading code embedder for {tier}")
+        Embedder(tier=tier, mode="code")
+        print(f"✅ Done code for {tier}")
+
     print("[Startup] All embedding models preloaded.")
-    yield  # The app runs after this line
+    yield
+
 
 app = FastAPI(
     title="Asklyne API",

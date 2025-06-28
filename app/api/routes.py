@@ -61,11 +61,12 @@ async def upload_file(
     chunks = chunker.chunk(text)
 
     # Embedding
-    embedder = Embedder(tier=tier)
+    embedder = Embedder(tier=tier, mode=mode)
     embeddings = embedder.embed_chunks(chunks)
 
     # Store in Qdrant
-    qdrant = QdrantService(tier=tier)
+    qdrant = QdrantService(tier=tier, mode=mode)
+
     qdrant.upsert_chunks(
         chunks=chunks,
         embeddings=embeddings,
@@ -126,7 +127,27 @@ async def handle_query(request: QueryRequest):
 
         # Step 4: Query LLM
         client = LLMClient.from_tier(request.tier)
-        full_prompt = f"Context:\n{context}\n\nQuestion: {request.query}\n\nAnswer:"
+        if request.mode == "code":
+            full_prompt = f"""You are a helpful AI coding assistant.
+
+        You will be given source code and a user request. Based on the request, you may:
+        - Modify the code
+        - Add new functionality
+        - Explain parts of the code
+        - Fix bugs or improve performance
+
+        Code Context:
+        {context}
+
+        User Request:
+        {request.query}
+
+        Respond with either a modified version of the code or a helpful explanation.
+        If you update the code, include the full version of the updated code.
+        """
+        else:
+            full_prompt = f"Context:\n{context}\n\nQuestion: {request.query}\n\nAnswer:"
+
         response = await client.query(full_prompt)
 
         return {"response": response, "context_used": context}

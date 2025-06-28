@@ -1,5 +1,3 @@
-# app/core/retriever.py
-
 from app.services.qdrant_service import QdrantService
 from app.services.typesense_service import TypesenseService
 from app.core.embedder import Embedder
@@ -7,14 +5,15 @@ from app.core.embedder import Embedder
 class Retriever:
     def __init__(self, tier: str):
         self.tier = tier.lower()
-        self.embedder = Embedder(tier=self.tier)
+        self.embedder = None
         self.qdrant = QdrantService(tier=self.tier)
         self.typesense = TypesenseService(tier=self.tier)
 
     def retrieve(self, query: str, session_id: str, mode: str, top_k: int = 5) -> list[dict]:
-        # Embed the query
+        if not self.embedder or self.embedder.mode != mode:
+            self.embedder = Embedder(tier=self.tier, mode=mode)
         query_vec = self.embedder.embed_chunks([query])[0]
-
+        
         # Semantic search
         semantic_hits = self.qdrant.search(
             query_embedding=query_vec,

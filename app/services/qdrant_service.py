@@ -13,10 +13,12 @@ QDRANT_API_KEY = Config.QDRANT_API_KEY
 
 
 class QdrantService:
-    def __init__(self, tier: str):
+    def __init__(self, tier: str, mode: str):
         self.tier = tier.lower()
-        self.collection_name = f"asklyne_chunks_{self.tier}"
-        self.vector_size = 1024
+        self.mode = mode.lower()
+        self.collection_name = f"asklyne_chunks_{self.tier}_{self.mode}"
+        self.vector_size = self.get_vector_size()
+
 
         self.client = QdrantClient(
             url=QDRANT_HOST,
@@ -25,6 +27,22 @@ class QdrantService:
 
         self.embedder = Embedder(tier=self.tier)
         self.ensure_collection_exists()
+        
+    def get_vector_size(self) -> int:
+        # You can customize these as needed
+        VECTOR_DIM_MAP = {
+            ("free", "text"): 1024,
+            ("plus", "text"): 1024,
+            ("pro", "text"): 1024,
+            ("free", "code"): 768,
+            ("plus", "code"): 768,
+            ("pro", "code"): 768
+        }
+        key = (self.tier, self.mode)
+        dim = VECTOR_DIM_MAP.get(key)
+        if not dim:
+            raise ValueError(f"No vector dimension defined for ({self.tier}, {self.mode})")
+        return dim
 
     def ensure_collection_exists(self):
             try:
