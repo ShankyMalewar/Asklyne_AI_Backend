@@ -44,3 +44,6 @@ pdfplumber
 pytesseract 
 pillow 
 pdf2image
+
+#code
+nbformat #to parse jupyter notebook

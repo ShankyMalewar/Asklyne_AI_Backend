@@ -9,6 +9,8 @@ from app.services.qdrant_service import QdrantService
 from app.services.typesense_service import TypesenseService
 from PIL import Image
 import pytesseract
+from app.utils.code_parser import extract_code_from_py, extract_code_from_ipynb
+
 
 router = APIRouter()
 
@@ -26,8 +28,6 @@ async def upload_file(
 ):
     from app.core.chunker import Chunker
     from app.core.embedder import Embedder
-    from app.services.qdrant_service import QdrantService
-    from app.services.typesense_service import TypesenseService
 
     # Read file content
     content = await file.read()
@@ -36,13 +36,21 @@ async def upload_file(
         try:
             image = Image.open(io.BytesIO(content))
             text = pytesseract.image_to_string(image)
-            
         except Exception as e:
             return JSONResponse(content={"error": f"OCR failed: {str(e)}"}, status_code=400)
+
+    elif mode == "code":
+        if file.filename.endswith(".py"):
+            text = extract_code_from_py(content)
+        elif file.filename.endswith(".ipynb"):
+            text = extract_code_from_ipynb(content)
+        else:
+            return JSONResponse(content={"error": "Unsupported code file type"}, status_code=400)
 
     elif file.filename.endswith(".pdf"):
         with pdfplumber.open(io.BytesIO(content)) as pdf:
             text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+
     else:
         text = content.decode("utf-8", errors="ignore")
 
