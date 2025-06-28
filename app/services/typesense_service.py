@@ -3,6 +3,8 @@
 import typesense
 from app.config import Config
 
+
+
 class TypesenseService:
     def __init__(self, tier: str):
         self.tier = tier.lower()
@@ -59,6 +61,7 @@ class TypesenseService:
             'q': query,
             'query_by': 'text',
             'filter_by': filter_by,
-            'per_page': top_k
+            'per_page': top_k,
+            "include_fields": "text,text_match_score",  # Add this
         })
         return results['hits']

@@ -16,6 +16,8 @@ class Reranker:
             return chunks
 
         pairs = [(query, chunk["text"]) for chunk in chunks]
+        if not pairs:
+            return [] 
         scores = self.model.predict(pairs)
 
         # Inject scores back into chunks

@@ -33,9 +33,14 @@ class Retriever:
             filters={"session_id": session_id, "mode": mode}
         )
         keyword_chunks = [
-            {"text": hit["document"]["text"], "source": "typesense", "score": hit["text_match_score"]}
+            {
+                "text": hit["document"].get("text", ""),
+                "source": "typesense",
+                "score": hit.get("text_match_score", 0.0)  # Default to 0.0 if not present
+            }
             for hit in keyword_hits
         ]
+
 
         # Merge & deduplicate
         all_chunks = {c["text"]: c for c in semantic_chunks + keyword_chunks}  # dedup by text

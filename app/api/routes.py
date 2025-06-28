@@ -3,9 +3,9 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import pdfplumber
 import io
+import traceback
 from app.services.qdrant_service import QdrantService
 from app.services.typesense_service import TypesenseService
-
 
 router = APIRouter()
 
@@ -24,6 +24,7 @@ async def upload_file(
     from app.core.chunker import Chunker
     from app.core.embedder import Embedder
     from app.services.qdrant_service import QdrantService
+    from app.services.typesense_service import TypesenseService
 
     # Read file content
     content = await file.read()
@@ -52,14 +53,14 @@ async def upload_file(
         session_id=session_id,
         mode=mode
     )
+
     # Store in Typesense
     typesense = TypesenseService(tier=tier)
     typesense.upsert_chunks(
         chunks=chunks,
         session_id=session_id,
         mode=mode
-)
-
+    )
 
     return {
         "session_id": session_id,
@@ -71,8 +72,6 @@ async def upload_file(
     }
 
 
-
-
 class QueryRequest(BaseModel):
     session_id: str
     query: str
@@ -81,8 +80,42 @@ class QueryRequest(BaseModel):
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
-    # TODO: retrieve → rerank → build prompt → LLM
-    return {"response": f"Mock answer to: {request.query}"}
+    from app.core.retriever import Retriever
+    from app.core.reranker import Reranker
+    from app.core.context_builder import ContextBuilder
+    from app.core.llm_client import LLMClient
+
+    try:
+        # Step 1: Retrieve chunks
+        retriever = Retriever(tier=request.tier)
+        chunks = retriever.retrieve(
+            query=request.query,
+            session_id=request.session_id,
+            mode=request.mode
+        )
+
+        # Step 2: Rerank if Plus/Pro
+        reranker = Reranker(tier=request.tier)
+        if not chunks:
+            return {"error": "No relevant chunks found for this query."}
+
+        ranked_chunks = reranker.rerank(request.query, chunks)
+
+        # Step 3: Build context
+        builder = ContextBuilder(tier=request.tier)
+        context = builder.build(ranked_chunks)
+
+        # Step 4: Query LLM
+        client = LLMClient.from_tier(request.tier)
+        full_prompt = f"Context:\n{context}\n\nQuestion: {request.query}\n\nAnswer:"
+        response = await client.query(full_prompt)
+
+        return {"response": response, "context_used": context}
+
+    except Exception as e:
+        tb = traceback.format_exc()
+        print("🔥 Exception Traceback:\n", tb)
+        return JSONResponse(content={"error": str(e), "trace": tb}, status_code=500)
 
 
 @router.post("/test-llm")
