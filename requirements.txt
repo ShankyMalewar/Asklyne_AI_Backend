@@ -47,3 +47,7 @@ pdf2image
 
 #code
 nbformat #to parse jupyter notebook
+
+#pdf download
+markdown2
+pdfkit

@@ -1,5 +1,7 @@
 import os
 import json
+import markdown2
+import pdfkit
 from app.core.llm_client import LLMClient
 
 def load_interactions(session_id: str) -> list[dict]:
@@ -16,19 +18,21 @@ def format_qa_log(interactions: list[dict]) -> str:
     )
 
 def build_prompt(mode: str, qa_log: str, custom_prompt: str | None = None) -> str:
-    base = """You are an AI assistant that generates high-quality study notes from a Q&A session.
+    base = """You are an expert AI assistant specialized in creating study notes.
 
-Format the notes with:
-- Headings
-- Bullet points
-- Clean, grouped topics
-- No repetition
+Given the following conversation session, generate **detailed, structured, and high-quality notes**. Use:
+- Clear topic-based headings
+- Bullet points and sub-bullets
+- Short paragraphs where needed
+- Highlight key concepts
+- Expand explanations if the content seems too short or vague
 
-Here is the session:
+Make the notes useful for revision and understanding.
+
 """
     if custom_prompt:
         base += f"\nUser Instructions:\n{custom_prompt}\n"
-    base += f"\n{qa_log}"
+    base += f"\nSession:\n{qa_log}"
     return base
 
 async def generate_notes(session_id: str, tier: str, mode: str, prompt_type: str, custom_prompt: str = "") -> str:
@@ -43,5 +47,46 @@ async def generate_notes(session_id: str, tier: str, mode: str, prompt_type: str
 
     prompt = build_prompt(mode, qa_log, custom_prompt if prompt_type == "custom" else None)
 
-    llm = LLMClient(model_name="meta-llama/Llama-3.3-70B-Instruct-Turbo-Free")
+    # Use Mistral for now for better speed and context balance
+    if tier in ["plus", "pro"]:
+        model_name = "mistralai/Mixtral-8x7B-Instruct-v0.1"
+    else:
+        model_name = "meta-llama/Llama-3.3-70B-Instruct-Turbo-Free"
+
+    llm = LLMClient(model_name=model_name)
+
     return await llm.query(prompt)
+
+def save_notes_as_pdf(md_content: str, session_id: str) -> str:
+    html = markdown2.markdown(md_content)
+
+    styled_html = f"""
+    <html>
+    <head>
+        <style>
+            body {{
+                font-family: 'Segoe UI', sans-serif;
+                font-size: 16px;
+                line-height: 1.7;
+                padding: 40px;
+                background-color: #ffffff;
+            }}
+            h1, h2, h3 {{
+                color: #1a237e;
+            }}
+            ul {{
+                margin-bottom: 1em;
+            }}
+            li {{
+                margin-bottom: 0.4em;
+            }}
+        </style>
+    </head>
+    <body>{html}</body>
+    </html>
+    """
+
+    pdf_path = f"sessions/{session_id}/asklyne_notes.pdf"
+    os.makedirs(os.path.dirname(pdf_path), exist_ok=True)
+    pdfkit.from_string(styled_html, pdf_path)
+    return pdf_path

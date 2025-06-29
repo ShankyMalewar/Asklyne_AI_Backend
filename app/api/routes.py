@@ -14,6 +14,8 @@ from app.utils.code_parser import extract_code_from_py, extract_code_from_ipynb
 import json
 from datetime import datetime
 from app.core.note_builder import generate_notes as build_notes
+from fastapi.responses import FileResponse
+from app.core.note_builder import save_notes_as_pdf
 
 
 
@@ -200,3 +202,29 @@ async def generate_notes_route(
         custom_prompt=custom_prompt or ""
     )
     return {"notes": notes}
+
+
+
+@router.post("/generate-notes-pdf")
+async def generate_notes_pdf(
+    session_id: str = Form(...),
+    tier: str = Form(...),
+    mode: str = Form(...),
+    prompt_type: Literal["full", "response_only", "custom"] = Form(...),
+    custom_prompt: Optional[str] = Form(None)
+):
+    notes = await build_notes(
+        session_id=session_id,
+        tier=tier,
+        mode=mode,
+        prompt_type=prompt_type,
+        custom_prompt=custom_prompt or ""
+    )
+
+    pdf_path = save_notes_as_pdf(notes, session_id)
+
+    return FileResponse(
+        path=pdf_path,
+        media_type="application/pdf",
+        filename=f"asklyne_notes_{session_id}.pdf"
+    )

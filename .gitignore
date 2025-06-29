@@ -49,3 +49,7 @@ __fastapi_cache__
 # Typesense or Qdrant local DB files (if using local)
 typesense-data/
 qdrant-data/
+
+
+# Exclude session logs and notes
+sessions/
