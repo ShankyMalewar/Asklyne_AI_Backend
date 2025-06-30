@@ -16,6 +16,13 @@ from datetime import datetime
 from app.core.note_builder import generate_notes as build_notes
 from fastapi.responses import FileResponse
 from app.core.note_builder import save_notes_as_pdf
+from app.core.chunker import Chunker
+from app.core.embedder import Embedder
+from app.core.retriever import Retriever
+from app.core.reranker import Reranker
+from app.core.context_builder import ContextBuilder
+from app.core.llm_client import LLMClient
+from app.core.llm_client import DeepSeekCoderClient
 
 
 
@@ -33,8 +40,7 @@ async def upload_file(
     mode: str = Form(...),
     tier: str = Form(...),
 ):
-    from app.core.chunker import Chunker
-    from app.core.embedder import Embedder
+    
 
     # Read file content
     content = await file.read()
@@ -107,10 +113,7 @@ class QueryRequest(BaseModel):
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
-    from app.core.retriever import Retriever
-    from app.core.reranker import Reranker
-    from app.core.context_builder import ContextBuilder
-    from app.core.llm_client import LLMClient
+    
 
     def save_interaction(session_id: str, query: str, response: str):
         path = f"sessions/{session_id}/interaction_log.json"
@@ -149,8 +152,13 @@ async def handle_query(request: QueryRequest):
         builder = ContextBuilder(tier=request.tier)
         context = builder.build(ranked_chunks)
 
-        client = LLMClient.from_tier(request.tier)
 
+        if request.mode == "code" and request.tier in ["plus", "pro"]:
+            client = DeepSeekCoderClient()
+        else:
+            client = LLMClient.from_tier(request.tier)
+
+        
         if request.mode == "code":
             full_prompt = f"""You are a helpful AI coding assistant.
 

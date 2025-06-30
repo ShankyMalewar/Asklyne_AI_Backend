@@ -38,3 +38,7 @@ class Config:
     # Typesense Config
     TYPESENSE_HOST = os.getenv("TYPESENSE_HOST")
     TYPESENSE_API_KEY = os.getenv("TYPESENSE_API_KEY")
+    
+    #code model
+    DEEPSEEK_API_TOKEN = os.getenv("DEEPSEEK_API_TOKEN")
+    DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
