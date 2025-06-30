@@ -67,34 +67,3 @@ class LLMClient:
             import traceback
             traceback.print_exc()
             return "[LLM failed]"
-
-class DeepSeekCoderClient:
-    def __init__(self):
-        self.api_url = Config.DEEPSEEK_API_URL
-        self.headers = {
-            "Authorization": f"Bearer {Config.DEEPSEEK_API_TOKEN}",
-            "Content-Type": "application/json"
-        }
-
-    async def query(self, prompt: str) -> str:
-        payload = {
-            "model": "deepseek-coder-6.7b-instruct",
-            "messages": [
-                {"role": "system", "content": "You are a helpful code assistant. Respond clearly and concisely."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.3,
-            "max_tokens": 1024,
-            "top_p": 0.95
-        }
-
-        try:
-            async with httpx.AsyncClient(timeout=60.0) as client:
-                response = await client.post(self.api_url, headers=self.headers, json=payload)
-                response.raise_for_status()
-                data = response.json()
-                return data["choices"][0]["message"]["content"]
-        except Exception as e:
-            import traceback
-            traceback.print_exc()
-            return "[DeepSeekCoderClient error]"
