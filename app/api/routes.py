@@ -16,6 +16,12 @@ from datetime import datetime
 from app.core.note_builder import generate_notes as build_notes
 from fastapi.responses import FileResponse
 from app.core.note_builder import save_notes_as_pdf
+from app.core.chunker import Chunker
+from app.core.embedder import Embedder
+from app.core.retriever import Retriever
+from app.core.reranker import Reranker
+from app.core.context_builder import ContextBuilder
+from app.core.llm_client import LLMClient
 
 
 
@@ -33,8 +39,7 @@ async def upload_file(
     mode: str = Form(...),
     tier: str = Form(...),
 ):
-    from app.core.chunker import Chunker
-    from app.core.embedder import Embedder
+
 
     # Read file content
     content = await file.read()
@@ -107,10 +112,7 @@ class QueryRequest(BaseModel):
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
-    from app.core.retriever import Retriever
-    from app.core.reranker import Reranker
-    from app.core.context_builder import ContextBuilder
-    from app.core.llm_client import LLMClient
+
 
     def save_interaction(session_id: str, query: str, response: str):
         path = f"sessions/{session_id}/interaction_log.json"
@@ -149,7 +151,8 @@ async def handle_query(request: QueryRequest):
         builder = ContextBuilder(tier=request.tier)
         context = builder.build(ranked_chunks)
 
-        client = LLMClient.from_tier(request.tier)
+        client = LLMClient.from_tier(request.tier, request.mode)
+
 
         if request.mode == "code":
             full_prompt = f"""You are a helpful AI coding assistant.
@@ -176,11 +179,16 @@ If you update the code, include the full version of the updated code.
 
         save_interaction(request.session_id, request.query, response)
 
-        return {"response": response, "context_used": context}
+        return {
+            "response": response,
+            "context_used": context,
+            "model_used": client.model_name  # ✅ shows user which LLM generated the answer
+        }
+
 
     except Exception as e:
         tb = traceback.format_exc()
-        print("🔥 Exception Traceback:\n", tb)
+        print(" Exception Traceback:\n", tb)
         return JSONResponse(content={"error": str(e), "trace": tb}, status_code=500)
 
 
