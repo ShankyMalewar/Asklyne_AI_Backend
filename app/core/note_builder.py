@@ -18,18 +18,21 @@ def format_qa_log(interactions: list[dict]) -> str:
     )
 
 def build_prompt(mode: str, qa_log: str, custom_prompt: str | None = None) -> str:
-    base = """You are an expert AI assistant specialized in creating study notes.
+    base = """You are an intelligent AI assistant trained to generate high-quality notes from user conversations.
 
-Given the following conversation session, generate **detailed, structured, and high-quality notes**. Use:
-- Clear topic-based headings
-- Bullet points and sub-bullets
-- Short paragraphs where needed
-- Highlight key concepts
-- Expand explanations if the content seems too short or vague
+    Given the following interaction history between the user and the AI, generate structured notes that help the user **review and understand** the material.
 
-Make the notes useful for revision and understanding.
+    Your output should:
+    - Adapt to the domain (e.g., academic, legal, technical, general)
+    - Use meaningful headings
+    - Highlight important insights, definitions, rules, examples
+    - Organize content logically (bullet points, paragraphs, or mixed)
+    - Be concise but clear
+    - Avoid repeating raw Q&A format
 
-"""
+    If the content lacks context, expand it intelligently. Always optimize for learning and clarity.
+    """
+
     if custom_prompt:
         base += f"\nUser Instructions:\n{custom_prompt}\n"
     base += f"\nSession:\n{qa_log}"

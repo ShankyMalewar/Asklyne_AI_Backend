@@ -23,7 +23,10 @@ class Chunker:
         Sentence-based chunking for plain text / PDF-extracted content.
         Groups sentences into token-controlled windows with overlap.
         """
-        sentences = re.split(r'(?<=[.!?])\s+',text.strip())
+        sentences = re.split(r'\n{2,}', text.strip())  # split on double newlines
+        if len(sentences) <= 1:
+            sentences = re.split(r'(?<=[.!?])\s+', text.strip())  # fallback to sentence-based
+
         sentence_tokens = [(s,self.estimate_tokens(s)) for s in sentences if s]
         print(f"Split into {len(sentence_tokens)} sentences")
         chunks = []

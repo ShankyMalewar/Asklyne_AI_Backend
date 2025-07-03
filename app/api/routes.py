@@ -4,6 +4,8 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 import pdfplumber
 import io
+from PIL import ImageEnhance, ImageFilter
+import numpy as np
 import os
 import traceback
 from app.services.qdrant_service import QdrantService
@@ -49,8 +51,17 @@ async def upload_file(
 
     if original_mode == "notes":
         try:
+            def preprocess_ocr_image(image: Image.Image) -> Image.Image:
+                image = image.convert("L")  # grayscale
+                image = image.resize((1200, int(image.height * (1200 / image.width))))  # upscale
+                image = image.filter(ImageFilter.MedianFilter(size=3))  # denoise
+                enhancer = ImageEnhance.Contrast(image)
+                image = enhancer.enhance(2.0)  # boost contrast
+                return image
+
             image = Image.open(io.BytesIO(content))
-            text = pytesseract.image_to_string(image)
+            image = preprocess_ocr_image(image)
+            text = pytesseract.image_to_string(image, config="--psm 6")
         except Exception as e:
             return JSONResponse(content={"error": f"OCR failed: {str(e)}"}, status_code=400)
 
