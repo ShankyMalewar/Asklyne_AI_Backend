@@ -194,14 +194,18 @@ async def handle_query(request: QueryRequest):
         else:
             SYSTEM_PROMPT = """You are a highly intelligent and helpful AI assistant. 
             You will be given context from a user-uploaded document or notes, along with a user query.
-
+            Session Metadata:
+            - Tier: {request.tier.capitalize()}
+            - Mode: {request.mode.capitalize()}
             Your job is to:
             - Answer clearly, accurately, and in a user-friendly way
             - Use bullet points, headings, or paragraphs depending on the question
             - Expand and explain if context is short or vague
             - Only use the given context — do NOT make up facts
             - If the context is not sufficient, respond: "Based on the provided context, I cannot answer confidently."
-
+            
+            If mode = 'notes' → Expect imperfect OCR and try to infer meaning  
+            If mode = 'code'  → Use technical reasoning and full examples where possible
             """
 
             full_prompt = f"{SYSTEM_PROMPT}\n\nContext:\n{context}\n\nUser Question:\n{request.query}\n\nAnswer:"
