@@ -1,27 +1,29 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
+import os
 
 from app.api.routes import router as api_router
 from app.core.embedder import Embedder
 
+# Read allowed tiers from environment variable
+TIERS_TO_LOAD = os.getenv("ASKLYNE_TIERS", "free").split(",")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("[Startup] Preloading embedding models...")
+    print(f"[Startup] Preloading embedding models for: {TIERS_TO_LOAD}")
 
-    tiers = ["free", "plus", "pro"]
-    for tier in tiers:
-        print(f"▶ Preloading text embedder for {tier}")
-        Embedder(tier=tier, mode="text")
-        print(f"✅ Done text for {tier}")
+    for tier in TIERS_TO_LOAD:
+        for mode in ["text", "code"]:
+            try:
+                print(f"▶ Preloading embedder: {tier}/{mode}")
+                Embedder(tier=tier, mode=mode)
+                print(f"✅ Done: {tier}/{mode}")
+            except Exception as e:
+                print(f"⚠️ Failed to preload embedder for {tier}/{mode}: {e}")
 
-        print(f"▶ Preloading code embedder for {tier}")
-        Embedder(tier=tier, mode="code")
-        print(f"✅ Done code for {tier}")
-
-    print("[Startup] All embedding models preloaded.")
+    print("[Startup] Embedding model loading complete.")
     yield
-
 
 app = FastAPI(
     title="Asklyne API",
