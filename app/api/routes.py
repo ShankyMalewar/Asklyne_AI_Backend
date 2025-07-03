@@ -39,17 +39,21 @@ async def upload_file(
     mode: str = Form(...),
     tier: str = Form(...),
 ):
-
+  
 
     # Read file content
     content = await file.read()
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    if mode == "notes":
+
+    original_mode = mode
+
+    if original_mode == "notes":
         try:
             image = Image.open(io.BytesIO(content))
             text = pytesseract.image_to_string(image)
         except Exception as e:
             return JSONResponse(content={"error": f"OCR failed: {str(e)}"}, status_code=400)
+
 
     elif mode == "code":
         if file.filename.endswith(".py"):
@@ -65,6 +69,8 @@ async def upload_file(
 
     else:
         text = content.decode("utf-8", errors="ignore")
+    
+    mode = "text" if original_mode == "notes" else mode
 
     # Chunking setup
     max_tokens = 480
@@ -134,12 +140,14 @@ async def handle_query(request: QueryRequest):
             json.dump(data, f, indent=2)
 
     try:
-        retriever = Retriever(tier=request.tier, mode=request.mode)
+        mode = "text" if request.mode == "notes" else request.mode
+
+        retriever = Retriever(tier=request.tier,mode=mode)
 
         chunks = retriever.retrieve(
             query=request.query,
             session_id=request.session_id,
-            mode=request.mode
+            mode=mode
         )
 
         reranker = Reranker(tier=request.tier)
@@ -151,7 +159,7 @@ async def handle_query(request: QueryRequest):
         builder = ContextBuilder(tier=request.tier)
         context = builder.build(ranked_chunks)
 
-        client = LLMClient.from_tier(request.tier, request.mode)
+        client = LLMClient.from_tier(request.tier, mode)
 
 
         if request.mode == "code":
@@ -199,9 +207,12 @@ async def generate_notes_route(
     session_id: str = Form(...),
     tier: str = Form(...),
     mode: str = Form(...),
+    
     prompt_type: Literal["full", "response_only", "custom"] = Form(...),
     custom_prompt: Optional[str] = Form(None)
 ):
+    mode = "text" if mode == "notes" else mode
+
     notes = await build_notes(
         session_id=session_id,
         tier=tier,
@@ -221,6 +232,8 @@ async def generate_notes_pdf(
     prompt_type: Literal["full", "response_only", "custom"] = Form(...),
     custom_prompt: Optional[str] = Form(None)
 ):
+    mode = "text" if mode == "notes" else mode
+
     notes = await build_notes(
         session_id=session_id,
         tier=tier,

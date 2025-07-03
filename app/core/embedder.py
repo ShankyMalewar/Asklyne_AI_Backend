@@ -22,6 +22,8 @@ class Embedder:
     def __init__(self, tier: str = "free", mode: str = "text"):
         self.tier = tier.lower()
         self.mode = mode.lower()
+        if self.mode == "notes":
+            self.mode = "text"
 
         model_name = TIER_MODE_MODEL_MAP.get(self.tier, {}).get(self.mode)
         if not model_name:
