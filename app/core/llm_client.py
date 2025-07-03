@@ -45,8 +45,9 @@ class LLMClient:
                 {"role": "system", "content": "You are a helpful assistant."},
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 1024,
+            "max_tokens": 768,
             "temperature": 0.9,
+            "top_p":0.95
         }
 
     async def query(self, prompt: str) -> str:

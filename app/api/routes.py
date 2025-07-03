@@ -176,23 +176,36 @@ async def handle_query(request: QueryRequest):
         if request.mode == "code":
             full_prompt = f"""You are a helpful AI coding assistant.
 
-You will be given source code and a user request. Based on the request, you may:
-- Modify the code
-- Add new functionality
-- Explain parts of the code
-- Fix bugs or improve performance
+            You will be given source code and a user request. Based on the request, you may:
+            - Modify the code
+            - Add new functionality
+            - Explain parts of the code
+            - Fix bugs or improve performance
 
-Code Context:
-{context}
+            Code Context:
+            {context}
 
-User Request:
-{request.query}
+            User Request:
+            {request.query}
 
-Respond with either a modified version of the code or a helpful explanation.
-If you update the code, include the full version of the updated code.
-"""
+            Respond with either a modified version of the code or a helpful explanation.
+            If you update the code, include the full version of the updated code.
+            """
         else:
-            full_prompt = f"Context:\n{context}\n\nQuestion: {request.query}\n\nAnswer:"
+            SYSTEM_PROMPT = """You are a highly intelligent and helpful AI assistant. 
+            You will be given context from a user-uploaded document or notes, along with a user query.
+
+            Your job is to:
+            - Answer clearly, accurately, and in a user-friendly way
+            - Use bullet points, headings, or paragraphs depending on the question
+            - Expand and explain if context is short or vague
+            - Only use the given context — do NOT make up facts
+            - If the context is not sufficient, respond: "Based on the provided context, I cannot answer confidently."
+
+            """
+
+            full_prompt = f"{SYSTEM_PROMPT}\n\nContext:\n{context}\n\nUser Question:\n{request.query}\n\nAnswer:"
+
 
         response = await client.query(full_prompt)
 
