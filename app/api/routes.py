@@ -229,36 +229,14 @@ async def handle_query(request: QueryRequest):
 
 
 
-
 @router.post("/generate-notes")
 async def generate_notes_route(
     session_id: str = Form(...),
     tier: str = Form(...),
     mode: str = Form(...),
-    
     prompt_type: Literal["full", "response_only", "custom"] = Form(...),
-    custom_prompt: Optional[str] = Form(None)
-):
-    mode = "text" if mode == "notes" else mode
-
-    notes = await build_notes(
-        session_id=session_id,
-        tier=tier,
-        mode=mode,
-        prompt_type=prompt_type,
-        custom_prompt=custom_prompt or ""
-    )
-    return {"notes": notes}
-
-
-
-@router.post("/generate-notes-pdf")
-async def generate_notes_pdf(
-    session_id: str = Form(...),
-    tier: str = Form(...),
-    mode: str = Form(...),
-    prompt_type: Literal["full", "response_only", "custom"] = Form(...),
-    custom_prompt: Optional[str] = Form(None)
+    custom_prompt: Optional[str] = Form(None),
+    as_pdf: bool = Form(False)
 ):
     mode = "text" if mode == "notes" else mode
 
@@ -270,10 +248,12 @@ async def generate_notes_pdf(
         custom_prompt=custom_prompt or ""
     )
 
-    pdf_path = save_notes_as_pdf(notes, session_id)
-
-    return FileResponse(
-        path=pdf_path,
-        media_type="application/pdf",
-        filename=f"asklyne_notes_{session_id}.pdf"
-    )
+    if as_pdf:
+        pdf_path = save_notes_as_pdf(notes, session_id)
+        return FileResponse(
+            path=pdf_path,
+            media_type="application/pdf",
+            filename=f"asklyne_notes_{session_id}.pdf"
+        )
+    else:
+        return {"notes": notes}
