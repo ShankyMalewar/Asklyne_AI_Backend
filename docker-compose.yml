@@ -1,0 +1,44 @@
+version: '3.9'
+
+services:
+  asklyne_free:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asklyne_free
+    ports:
+      - "8000:8000"
+    environment:
+      - ASKLYNE_TIERS=free
+    env_file:
+      - .env
+    volumes:
+      - ./sessions:/app/sessions
+
+  asklyne_plus:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asklyne_plus
+    ports:
+      - "8001:8000"
+    environment:
+      - ASKLYNE_TIERS=plus
+    env_file:
+      - .env
+    volumes:
+      - ./sessions:/app/sessions
+
+  asklyne_pro:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: asklyne_pro
+    ports:
+      - "8002:8000"
+    environment:
+      - ASKLYNE_TIERS=pro
+    env_file:
+      - .env
+    volumes:
+      - ./sessions:/app/sessions
