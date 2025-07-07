@@ -39,10 +39,8 @@ async def upload_file(
     file: UploadFile = File(...),
     session_id: str = Form(...),
     mode: str = Form(...),
-    tier: str = Form(...),
 ):
-  
-
+    tier = os.getenv("ASKLYNE_TIERS", "free").lower()
     # Read file content
     content = await file.read()
     pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
@@ -125,12 +123,11 @@ class QueryRequest(BaseModel):
     session_id: str
     query: str
     mode: Literal["text", "notes", "code"]
-    tier: Literal["free", "plus", "pro"]
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
 
-
+    tier = os.getenv("ASKLYNE_TIERS", "free").lower()
     def save_interaction(session_id: str, query: str, response: str):
         path = f"sessions/{session_id}/interaction_log.json"
         os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -153,7 +150,7 @@ async def handle_query(request: QueryRequest):
     try:
         mode = "text" if request.mode == "notes" else request.mode
 
-        retriever = Retriever(tier=request.tier,mode=mode)
+        retriever = Retriever(tier=tier,mode=mode)
 
         chunks = retriever.retrieve(
             query=request.query,
@@ -161,16 +158,16 @@ async def handle_query(request: QueryRequest):
             mode=mode
         )
 
-        reranker = Reranker(tier=request.tier)
+        reranker = Reranker(tier=tier)
         if not chunks:
             return {"error": "No relevant chunks found for this query."}
 
         ranked_chunks = reranker.rerank(request.query, chunks)
 
-        builder = ContextBuilder(tier=request.tier)
+        builder = ContextBuilder(tier=tier)
         context = builder.build(ranked_chunks)
 
-        client = LLMClient.from_tier(request.tier, mode)
+        client = LLMClient.from_tier(tier, mode)
 
 
         if request.mode == "code":
@@ -232,12 +229,12 @@ async def handle_query(request: QueryRequest):
 @router.post("/generate-notes")
 async def generate_notes_route(
     session_id: str = Form(...),
-    tier: str = Form(...),
     mode: str = Form(...),
     prompt_type: Literal["full", "response_only", "custom"] = Form(...),
     custom_prompt: Optional[str] = Form(None),
     as_pdf: bool = Form(False)
 ):
+    tier = os.getenv("ASKLYNE_TIERS", "free").lower()
     mode = "text" if mode == "notes" else mode
 
     notes = await build_notes(
