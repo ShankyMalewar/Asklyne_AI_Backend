@@ -21,7 +21,7 @@ class LLMClient:
             model_name = (
                 "mistralai/Mixtral-8x7B-Instruct-v0.1" if mode == "code" else "mistralai/Mistral-7B-Instruct-v0.3"
             )
-            max_tokens = 2048
+            max_tokens = 3072
         elif tier == "pro":
             model_name = (
                 "Qwen/Qwen2.5-Coder-32B-Instruct" if mode == "code" else "mistralai/Mixtral-8x7B-Instruct-v0.1"

@@ -24,7 +24,7 @@ from app.core.retriever import Retriever
 from app.core.reranker import Reranker
 from app.core.context_builder import ContextBuilder
 from app.core.llm_client import LLMClient
-
+import time
 
 
 router = APIRouter()
@@ -126,6 +126,8 @@ class QueryRequest(BaseModel):
 
 @router.post("/query")
 async def handle_query(request: QueryRequest):
+    
+    start = time.time()
 
     tier = os.getenv("ASKLYNE_TIERS", "free").lower()
     def save_interaction(session_id: str, query: str, response: str):
@@ -152,17 +154,21 @@ async def handle_query(request: QueryRequest):
 
         retriever = Retriever(tier=tier,mode=mode)
 
-        chunks = retriever.retrieve(
+        chunks = await retriever.retrieve_async(
             query=request.query,
             session_id=request.session_id,
             mode=mode
         )
+        print("⏱️ Retrieval Time:", round(time.time() - start, 2))
 
+        
         reranker = Reranker(tier=tier)
         if not chunks:
             return {"error": "No relevant chunks found for this query."}
 
-        ranked_chunks = reranker.rerank(request.query, chunks)
+        t1 = time.time()
+        ranked_chunks = reranker.rerank(request.query, chunks[:5])
+        print("⏱️ Rerank Time:", round(time.time() - t1, 2))
 
         builder = ContextBuilder(tier=tier)
         context = builder.build(ranked_chunks)
@@ -208,8 +214,12 @@ async def handle_query(request: QueryRequest):
             full_prompt = f"{SYSTEM_PROMPT}\n\nContext:\n{context}\n\nUser Question:\n{request.query}\n\nAnswer:"
 
 
+        t2 = time.time()
         response = await client.query(full_prompt)
-
+        print("⏱️ LLM Time:", round(time.time() - t2, 2))
+        print("⚡ Total Time:", round(time.time() - start, 2))
+        
+        
         save_interaction(request.session_id, request.query, response)
 
         return {
