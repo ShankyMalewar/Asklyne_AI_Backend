@@ -15,16 +15,16 @@ class LLMClient:
         mode = mode.lower()
 
         if tier == "free":
-            model_name = "meta-llama/Llama-3.2-3B-Instruct-Turbo"
+            model_name = "deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free"
             max_tokens = 768
         elif tier == "plus":
             model_name = (
-                "mistralai/Mixtral-8x7B-Instruct-v0.1" if mode == "code" else "mistralai/Mistral-7B-Instruct-v0.3"
+                "arcee-ai/coder-large" if mode == "code" else "mistralai/Mixtral-8x7B-Instruct-v0.1"
             )
             max_tokens = 3072
         elif tier == "pro":
             model_name = (
-                "Qwen/Qwen2.5-Coder-32B-Instruct" if mode == "code" else "mistralai/Mixtral-8x7B-Instruct-v0.1"
+                "Qwen/Qwen2.5-Coder-32B-Instruct" if mode == "code" else "Qwen/Qwen3-235B-A22B-fp8-tput"
             )
             max_tokens = 3072
         else:
